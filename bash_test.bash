@@ -14,9 +14,9 @@
 #NB I use kallisto for the DESeq analysis (aligns to transcriptome, whilst STAR aligns to genome)
 
 outdir_star=/mnt/home3/ahringer/sw2154/out/
-genome_chr=/mnt/home3/ahringer/sw2154/references/chrom_sizes/elegans.chrom.sizes.txt
+genome_chr=/mnt/home3/ahringer/sw2154/references/built_genomes/star/c.elegans.latest
 fastq_dir=/mnt/home3/ahringer/sw2154/data/
-star_index=/mnt/home3/ahringer/sw2154/references/star/elegans_new
+star_index=/mnt/home3/ahringer/sw2154/references/built_genomes/star/c.elegans.latest
 
 declare -A FILES
 
@@ -34,7 +34,7 @@ echo "${base}_L001_R1_001.fastq.gz"
 echo "${base}_L001_R2_001.fastq.gz"
  
 
-STAR --readFilesCommand zcat --runThreadN 6 --genomeDir $star_index --readFilesIn ${base}_L001_R1_001.fastq.gz ${base}_L001_R2_001.fastq.gz --outFileNamePrefix $outdir_star --outSAMtype BAM SortedByCoordinate --outSAMattrIHstart 0 --outWigType wiggle --twopassMode Basic --limitBAMsortRAM 6274374343
+STAR --readFilesCommand zcat --runThreadN 20 --genomeDir $star_index --readFilesIn ${base}_L001_R1_001.fastq.gz ${base}_L001_R2_001.fastq.gz --outFileNamePrefix $outdir_star --outSAMtype BAM SortedByCoordinate --outSAMattrIHstart 0 --outWigType wiggle --twopassMode Bas>
 
 done
 
