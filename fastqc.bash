@@ -21,15 +21,19 @@
 #      holdinput = Not currently used
 ######################################################################################################
 
+#Set the defaults
 outdir=/mnt/home3/ahringer/sw2154/out
 genome_chr=/mnt/home3/ahringer/sw2154/references/built_genomes/star/c.elegans.latest
 fastq_dir=/mnt/home3/ahringer/sw2154/data/
 star_index=/mnt/home3/ahringer/sw2154/references/built_genomes/star/c.elegans.latest
 THREADS=1
 RUNID="PipelineRun-$(date '+%Y-%m-%d-%R')"
+HOLDINPUT=false
 
+#Set the possible input options
 options=$(getopt -o '' -l threads: -l path: -l id: -l holdinput: -- "$@") || exit_with_bad_args
 
+#Get the inputs
 eval set -- "$options"
 while true; do
     case "$1" in
@@ -64,8 +68,10 @@ echo "$analysis_out_dir"
 
 cd $fastq_dir
 
+# Make array to store fastq name
 declare -A FILES
 
+#Get all fastq names from input folder
 for f in *fastq.gz; do                  # search the files with the suffix
     base=${f%_L001_*}                        # remove after "_L001_" To make sample ID the hash key
     if [[ $f == $base* ]] && [[ $f == *"R1"* ]]; then    # if the variable is the current sample ID and is forward
@@ -75,7 +81,10 @@ for f in *fastq.gz; do                  # search the files with the suffix
     fi
 done
 
+THREADCOUNTER=0
 
+
+#Loops through the fastq names, make directories for their output and run fastqc
 for base in "${!FILES[@]}"; do 
     echo "${base}_L001_R1_001.fastq.gz"
     echo "${base}_L001_R2_001.fastq.gz"
@@ -84,18 +93,20 @@ for base in "${!FILES[@]}"; do
     mkdir ${analysis_out_dir}/${base}/fastq
 
     cd ${analysis_out_dir}/${base}/fastq 
-    mv $fastq_dir/${base}_L001_R*_001.fastq.gz .
 
-    fastqc ${base}_L001_R1_001.fastq.gz ${base}_L001_R2_001.fastq.gz
+    if [ $HOLDINPUT == "false" ]; then
+        mv $fastq_dir/${base}_L001_R*_001.fastq.gz .
+    fi
+
+    fastqc ${base}_L001_R1_001.fastq.gz ${base}_L001_R2_001.fastq.gz &
+
+    $THREADCOUNTER = $(( $THREADCOUNTER + 1 ))
+    if [ "$THREADCOUNTER" -ge "$THREADS" ]; then
+        echo "Maximum number of pipelines are running ($THREADS), waiting for them to finish"
+        wait
+        unset COUNTER
+        echo "Running the next group of pipelines now"
+        COUNTER=0
+    fi
 
 done
-
-
-
-# ~/wigToBigWig_tool/wigToBigWig $outdir_star/$sample.Signal.UniqueMultiple.str1.out.wig $genome_chr $outdir_star/$sample.Signal.UniqueMultiple.str1.out.bw
-# ~/wigToBigWig_tool/wigToBigWig $outdir_star/$sample.Signal.UniqueMultiple.str2.out.wig $genome_chr $outdir_star/$sample.Signal.UniqueMultiple.str2.out.bw
-# ~/wigToBigWig_tool/wigToBigWig $outdir_star/$sample.Signal.Unique.str1.out.wig $genome_chr $outdir_star/$sample.Signal.Unique.str1.out.bw
-# ~/wigToBigWig_tool/wigToBigWig $outdir_star/$sample.Signal.Unique.str2.out.wig $genome_chr $outdir_star/$sample.Signal.Unique.str2.out.bw
-
-#echo "$sample complete"
-#done
