@@ -10,16 +10,25 @@
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=aft36@cam.ac.uk
 
-#this code makes STAR aligned bigwig tracks and gives a "final.out" file that tells you the #reads and #uniquely mapped reads
-#NB I use kallisto for the DESeq analysis (aligns to transcriptome, whilst STAR aligns to genome)
+#######################################################################################################
+############################## fastq bash pipeline ####################################################
+# This code will carryout fastqc on all fastq files in the input repository
+# The pipeline is for use on a slurm hpc
+# Options include:
+#      threads = Not currently used
+#      path = Change the path of the input files
+#      id = Change the name of the output folder, the default is a datestamp
+#      holdinput = Not currently used
+######################################################################################################
 
-outdir=/mnt/home3/ahringer/sw2154/out/
+outdir=/mnt/home3/ahringer/sw2154/out
 genome_chr=/mnt/home3/ahringer/sw2154/references/built_genomes/star/c.elegans.latest
 fastq_dir=/mnt/home3/ahringer/sw2154/data/
 star_index=/mnt/home3/ahringer/sw2154/references/built_genomes/star/c.elegans.latest
 THREADS=1
+RUNID="PipelineRun-$(date '+%Y-%m-%d-%R')"
 
-options=$(getopt -o '' -l threads: -l path: -l id: -l holdinput -l -- "$@") || exit_with_bad_args
+options=$(getopt -o '' -l threads: -l path: -l id: -l holdinput: -- "$@") || exit_with_bad_args
 
 eval set -- "$options"
 while true; do
@@ -49,10 +58,15 @@ while true; do
 done
 
 analysis_out_dir=${outdir}/${RUNID}
+mkdir $analysis_out_dir
+
+echo "$analysis_out_dir"
+
+cd $fastq_dir
 
 declare -A FILES
 
-for f in $fastq_dir/*fastq.gz; do                  # search the files with the suffix
+for f in *fastq.gz; do                  # search the files with the suffix
     base=${f%_L001_*}                        # remove after "_L001_" To make sample ID the hash key
     if [[ $f == $base* ]] && [[ $f == *"R1"* ]]; then    # if the variable is the current sample ID and is forward
         FILES[$base]=$f                  # then store the filename
@@ -61,15 +75,18 @@ for f in $fastq_dir/*fastq.gz; do                  # search the files with the s
     fi
 done
 
+
 for base in "${!FILES[@]}"; do 
-echo "${base}_L001_R1_001.fastq.gz"
-echo "${base}_L001_R2_001.fastq.gz"
- 
- mkdir ${analysis_out_dir}/${RUNID}/${base}/fastq
+    echo "${base}_L001_R1_001.fastq.gz"
+    echo "${base}_L001_R2_001.fastq.gz"
 
- cd ${analysis_out_dir}/${RUNID}/${base}/fastq
+    mkdir ${analysis_out_dir}/${base} 
+    mkdir ${analysis_out_dir}/${base}/fastq
 
-fastq ${base}_L001_R1_001.fastq.gz ${base}_L001_R2_001.fastq.gz
+    cd ${analysis_out_dir}/${base}/fastq 
+    mv $fastq_dir/${base}_L001_R*_001.fastq.gz .
+
+    fastqc ${base}_L001_R1_001.fastq.gz ${base}_L001_R2_001.fastq.gz
 
 done
 
