@@ -96,17 +96,19 @@ for base in "${!FILES[@]}"; do
 
     if [ $HOLDINPUT == "false" ]; then
         mv $fastq_dir/${base}_L001_R*_001.fastq.gz .
+    else
+        cp $fastq_dir/${base}_L001_R*_001.fastq.gz .
     fi
 
     fastqc ${base}_L001_R1_001.fastq.gz ${base}_L001_R2_001.fastq.gz &
 
-    $THREADCOUNTER = $(( $THREADCOUNTER + 1 ))
-    if [ "$THREADCOUNTER" -ge "$THREADS" ]; then
-        echo "Maximum number of pipelines are running ($THREADS), waiting for them to finish"
-        wait
-        unset COUNTER
-        echo "Running the next group of pipelines now"
-        COUNTER=0
-    fi
+#    $THREADCOUNTER = $(( $THREADCOUNTER + 1 ))
+#    if [ "$THREADCOUNTER" -ge "$THREADS" ]; then
+#        echo "Maximum number of pipelines are running ($THREADS), waiting for them to finish"
+#        wait
+#        unset COUNTER
+#        echo "Running the next group of pipelines now"
+#        COUNTER=0
+#    fi
 
 done
