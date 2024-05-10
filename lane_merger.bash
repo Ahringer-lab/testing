@@ -15,8 +15,16 @@
 
 DIR=~/data
 LANES=2
-RUNID="PipelineRun-$(date '+%Y-%m-%d-%R')"
+RUNID="Merged-$(date '+%Y-%m-%d-%R')"
 OUTDIR=~/output
+
+function exit_with_bad_args {
+    echo "Usage: bash lane_merger.bash optional args: --dir <input dir> --lanes <number of lanes> --output <output dir> "
+    echo "Invalid arguments provided" >&2
+    exit # this stops the terminal closing when run as source
+}
+
+
 
 #Set the possible input options
 options=$(getopt -o '' -l dir: -l lanes: -l output: -- "$@") || exit_with_bad_args
@@ -46,7 +54,8 @@ while true; do
 done
 
 cd $DIR
-#OUTDIR=${OUTDIR}/${RUNID}
+OUTDIR=${OUTDIR}/${RUNID}
+mkdir $OUTDIR
 
 # Make array to store fastq name
 declare -A FILES
@@ -63,6 +72,6 @@ done
 
 for base in "${!FILES[@]}"; do
     echo "${base}"
-    cat ${base}_L001_R1_001.fastq.gz ${base}_L002_R1_001.fastq.gz > ${base}_R1_merged.fastq.gz
-    cat ${base}_L001_R2_001.fastq.gz ${base}_L002_R2_001.fastq.gz > ${base}_R2_merged.fastq.gz
+    cat ${base}_L001_R1_001.fastq.gz ${base}_L002_R1_001.fastq.gz > ${OUTDIR}/${base}_R1_merged.fastq.gz
+    cat ${base}_L001_R2_001.fastq.gz ${base}_L002_R2_001.fastq.gz > ${OUTDIR}/${base}_R2_merged.fastq.gz
 done
