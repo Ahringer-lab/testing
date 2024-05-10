@@ -46,14 +46,23 @@ while true; do
 done
 
 cd $DIR
-OUTDIR=${OUTDIR}/${RUNID}
+#OUTDIR=${OUTDIR}/${RUNID}
 
-for base in "${!FILES[@]}"; do 
+# Make array to store fastq name
+declare -A FILES
+
+#Get all fastq names from input folder
+for f in *fastq.gz; do                  # search the files with the suffix
+    base=${f%_L001_*}                        # remove after "_L001_" To make sample ID the hash key
+    if [[ $f == $base* ]] && [[ $f == *"R1"* ]]; then    # if the variable is the current sample ID and is forward
+        FILES[$base]=$f                  # then store the filename
+    elif [[ $f == $base* ]] && [[ $f == *"R2"* ]]; then # if the variable is the current sample and is reverse
+        FILES[$base]+=" $f"
+    fi
+done
+
+for base in "${!FILES[@]}"; do
+    echo "${base}"
     echo "${base}_L001_R1_001.fastq.gz"
     echo "${base}_L001_R2_001.fastq.gz"
-
-    mkdir ${analysis_out_dir}/${base} 
-    mkdir ${analysis_out_dir}/${base}/fastq
-
-
 done
