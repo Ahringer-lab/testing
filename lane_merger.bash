@@ -19,7 +19,7 @@ RUNID="PipelineRun-$(date '+%Y-%m-%d-%R')"
 OUTDIR=~/output
 
 #Set the possible input options
-options=$(getopt -o '' -l dir: -l lanes: -l output:-- "$@") || exit_with_bad_args
+options=$(getopt -o '' -l dir: -l lanes: -l output: -- "$@") || exit_with_bad_args
 
 #Get the inputs
 eval set -- "$options"
@@ -53,7 +53,7 @@ declare -A FILES
 
 #Get all fastq names from input folder
 for f in *fastq.gz; do                  # search the files with the suffix
-    base=${f%_L001_*}                        # remove after "_L001_" To make sample ID the hash key
+    base=${f%_L00*_*}                        # remove after "_L00*_" To make sample ID the hash key (Lane number is wildard here)
     if [[ $f == $base* ]] && [[ $f == *"R1"* ]]; then    # if the variable is the current sample ID and is forward
         FILES[$base]=$f                  # then store the filename
     elif [[ $f == $base* ]] && [[ $f == *"R2"* ]]; then # if the variable is the current sample and is reverse
@@ -63,6 +63,6 @@ done
 
 for base in "${!FILES[@]}"; do
     echo "${base}"
-    echo "${base}_L001_R1_001.fastq.gz"
-    echo "${base}_L001_R2_001.fastq.gz"
+    cat ${base}_L001_R1_001.fastq.gz ${base}_L002_R1_001.fastq.gz > ${base}_R1_merged.fastq.gz
+    cat ${base}_L001_R2_001.fastq.gz ${base}_L002_R2_001.fastq.gz > ${base}_R2_merged.fastq.gz
 done
