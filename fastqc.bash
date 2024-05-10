@@ -19,6 +19,7 @@
 #      path = Change the path of the input files
 #      id = Change the name of the output folder, the default is a datestamp
 #      holdinput = Not currently used
+# Author Steve Walsh May 2024
 ######################################################################################################
 
 #Set the defaults
